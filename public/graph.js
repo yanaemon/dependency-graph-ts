@@ -4,9 +4,8 @@ let svg = null;
 let g = null;
 let zoom = null;
 let selectedNode = null;
-let currentShowFullPath = true;
 
-async function loadGraph(excludePattern = '', rootDir = '', showFullPath = null) {
+async function loadGraph(excludePattern = '') {
     try {
         document.getElementById('loading').style.display = 'block';
         
@@ -14,12 +13,8 @@ async function loadGraph(excludePattern = '', rootDir = '', showFullPath = null)
         if (excludePattern) {
             params.append('exclude', excludePattern);
         }
-        if (rootDir) {
-            params.append('rootDir', rootDir);
-        }
-        if (showFullPath !== null) {
-            params.append('showFullPath', showFullPath);
-        }
+        // Always use full path
+        params.append('showFullPath', true);
         
         const response = await fetch(`/api/graph?${params}`);
         const data = await response.json();
@@ -250,25 +245,11 @@ function showNodeDetails(node) {
 
 function applySettings() {
     const excludePattern = document.getElementById('exclude-pattern').value;
-    const rootDir = document.getElementById('root-dir').value;
-    const showFullPath = document.getElementById('show-full-path').checked;
-    currentShowFullPath = showFullPath;
-    loadGraph(excludePattern, rootDir, showFullPath);
-}
-
-function toggleFullPath() {
-    const showFullPath = document.getElementById('show-full-path').checked;
-    currentShowFullPath = showFullPath;
-    const excludePattern = document.getElementById('exclude-pattern').value;
-    const rootDir = document.getElementById('root-dir').value;
-    loadGraph(excludePattern, rootDir, showFullPath);
+    loadGraph(excludePattern);
 }
 
 function resetGraph() {
     document.getElementById('exclude-pattern').value = '';
-    document.getElementById('root-dir').value = '';
-    document.getElementById('show-full-path').checked = true;
-    currentShowFullPath = true;
     loadGraph();
 }
 
@@ -291,15 +272,5 @@ window.addEventListener('resize', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load config to get default showFullPath setting
-    try {
-        const configResponse = await fetch('/api/config');
-        const config = await configResponse.json();
-        currentShowFullPath = config.showFullPath;
-        document.getElementById('show-full-path').checked = config.showFullPath;
-    } catch (error) {
-        console.error('Failed to load config:', error);
-    }
-    
     loadGraph();
 });
