@@ -1,6 +1,6 @@
 {
   "port": 4000,
-  "defaultRootDir": ".",
+  "defaultRootDir": "./examples",
   "excludePatterns": [
     "node_modules",
     "dist",

@@ -3,9 +3,9 @@ import { Button } from "@components/Button";
 import { libFunction } from "@lib";
 import { formatDate } from "@utils/helpers";
 
-// Test absolute imports (baseUrl)
-import { functionA } from "example/a";
-import { functionB } from "example/b";
+// Test relative imports
+import { functionA } from "./a";
+import { functionB } from "./b";
 
 export function app() {
 	Button();

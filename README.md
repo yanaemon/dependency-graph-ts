@@ -135,12 +135,31 @@ npm run type-check
 npm run lint
 ```
 
+## Project Structure
+
+```
+dependency-graph.ts/
+├── src/               # Core functionality
+│   ├── parser.ts      # Dependency parser
+│   ├── server.ts      # Express server
+│   └── config.ts      # Configuration management
+├── examples/          # Example TypeScript files
+│   ├── tsconfig.json  # TypeScript config for examples
+│   └── src/           # Example source files
+├── public/            # Frontend assets
+│   ├── index.html     # Web interface
+│   └── graph.js       # D3.js visualization
+├── tsconfig.json      # Main TypeScript configuration
+└── config.json        # Default configuration
+```
+
 ## Architecture
 
 - **Parser** (`src/parser.ts`): Analyzes TypeScript/JavaScript files and builds the dependency graph
 - **Server** (`src/server.ts`): Express server providing REST API and static file serving
 - **Frontend** (`public/`): D3.js visualization and interactive UI
 - **Config** (`src/config.ts`): Configuration management with multiple override sources
+- **Examples** (`examples/`): Demonstration files showing various import patterns and circular dependencies
 
 ## License
 
