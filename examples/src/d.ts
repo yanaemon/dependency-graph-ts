@@ -1,6 +1,7 @@
-// import { functionA } from "./a";
+import { functionA } from "./a";
 
 export function functionD() {
 	console.log("Function D");
-	// Will add circular dependency in next commit
+	// This creates a circular dependency: a -> d -> a
+	// Note: calling functionA() here would cause infinite recursion!
 }

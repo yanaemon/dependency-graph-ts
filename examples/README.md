@@ -8,11 +8,16 @@ This directory contains example TypeScript files to demonstrate the dependency g
 examples/
 ├── tsconfig.json      # TypeScript configuration for examples
 └── src/
-    ├── a.ts          # Example with various imports
+    ├── a.ts          # Example with circular dependencies
     ├── b.ts          # Example with path aliases
-    ├── c.ts          # Simple example
-    ├── d.ts          # Another example
+    ├── c.ts          # Circular dependency with b.ts
+    ├── d.ts          # Circular dependency with a.ts
     ├── app.ts        # Main app example with various imports
+    ├── circular/     # Clear circular dependency example
+    │   ├── README.md
+    │   ├── module1.ts
+    │   ├── module2.ts
+    │   └── module3.ts
     ├── components/   # Example components
     │   └── Button.ts
     ├── lib/          # Example library files
@@ -35,8 +40,13 @@ The examples use various path aliases defined in `tsconfig.json`:
 - Files imported via different paths (alias vs relative) resolve to the same node
 - Example: `@/lib/common` and `./lib/common` both resolve to the same file
 
-### Import Patterns
-Various import patterns are demonstrated including path aliases, relative imports, and baseUrl resolution.
+### Circular Dependencies
+Multiple circular dependency examples:
+1. **Simple cycle**: a.ts → d.ts → a.ts
+2. **Mutual dependency**: b.ts ↔ c.ts  
+3. **Chain cycle**: circular/module1.ts → module2.ts → module3.ts → module1.ts
+
+All circular dependencies will be highlighted in RED in the visualization.
 
 ## Running the Examples
 

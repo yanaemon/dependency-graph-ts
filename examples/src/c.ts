@@ -1,6 +1,7 @@
-// import { functionB } from "./b";
+import { functionB } from "./b";
 
 export function functionC() {
 	console.log("Function C");
-	// Circular dependency commented out for now
+	// This creates a circular dependency: b -> c -> b
+	// Note: In a real app, this would cause issues!
 }
