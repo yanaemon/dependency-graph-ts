@@ -10,7 +10,8 @@
       "@components/*": ["components/*"],
       "@utils/*": ["utils/*"],
       "@lib": ["lib/index.ts"],
-      "@example/*": ["./example/*"]
+      "@example/*": ["./example/*"],
+      "@/*": ["*"]
     },
     "strict": true,
     "esModuleInterop": true,
