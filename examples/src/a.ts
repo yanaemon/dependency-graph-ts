@@ -1,7 +1,6 @@
 // Test path aliases
 import { Button } from "@components/Button";
 import { formatDate } from "@utils/helpers";
-import { commonFunction } from "@/lib/common"; // Import using @/ alias - resolves to same node as ./lib/common
 import { functionB } from "./b";
 import { functionC } from "./c";
 import { functionD } from "./d";

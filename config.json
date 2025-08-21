@@ -1,19 +1,19 @@
 {
-  "port": 4000,
-  "defaultRootDir": "./examples",
-  "excludePatterns": [
-    "node_modules",
-    "dist",
-    "\\.test\\.",
-    "\\.spec\\.",
-    "__tests__"
-  ],
-  "includePatterns": [],
-  "extensions": [".ts", ".tsx", ".js", ".jsx"],
-  "showFullPath": true,
-  "ui": {
-    "nodeRadius": 8,
-    "linkDistance": 100,
-    "chargeStrength": -300
-  }
+	"port": 4000,
+	"defaultRootDir": "./examples",
+	"excludePatterns": [
+		"node_modules",
+		"dist",
+		"\\.test\\.",
+		"\\.spec\\.",
+		"__tests__"
+	],
+	"includePatterns": [],
+	"extensions": [".ts", ".tsx", ".js", ".jsx"],
+	"showFullPath": true,
+	"ui": {
+		"nodeRadius": 8,
+		"linkDistance": 100,
+		"chargeStrength": -300
+	}
 }

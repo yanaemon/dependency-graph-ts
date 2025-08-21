@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 export interface DependencyNode {
 	id: string;
@@ -135,7 +135,7 @@ export class DependencyParser {
 					const aliasPrefix = alias.replace(/\/?\*$/, "");
 					return (
 						importPath === aliasPrefix ||
-						importPath.startsWith(aliasPrefix + "/")
+						importPath.startsWith(`${aliasPrefix}/`)
 					);
 				});
 

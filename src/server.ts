@@ -1,5 +1,5 @@
+import * as path from "node:path";
 import express from "express";
-import * as path from "path";
 import { type Config, loadConfig } from "./config";
 import { DependencyParser } from "./parser";
 
@@ -24,7 +24,7 @@ const PORT = config.port;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
-app.get("/api/config", (req, res) => {
+app.get("/api/config", (_req, res) => {
 	res.json(config);
 });
 
@@ -37,7 +37,7 @@ app.get("/api/graph", (req, res) => {
 		config.excludePatterns.forEach((pattern) => {
 			try {
 				excludePatterns.push(new RegExp(pattern));
-			} catch (e) {
+			} catch (_e) {
 				console.error(`Invalid regex pattern in config: ${pattern}`);
 			}
 		});
@@ -46,7 +46,7 @@ app.get("/api/graph", (req, res) => {
 		config.includePatterns.forEach((pattern) => {
 			try {
 				includePatterns.push(new RegExp(pattern));
-			} catch (e) {
+			} catch (_e) {
 				console.error(`Invalid regex pattern in config: ${pattern}`);
 			}
 		});
@@ -59,7 +59,7 @@ app.get("/api/graph", (req, res) => {
 			excludes.forEach((pattern: any) => {
 				try {
 					excludePatterns.push(new RegExp(pattern));
-				} catch (e) {
+				} catch (_e) {
 					console.error(`Invalid regex pattern: ${pattern}`);
 				}
 			});
@@ -73,7 +73,7 @@ app.get("/api/graph", (req, res) => {
 			includes.forEach((pattern: any) => {
 				try {
 					includePatterns.push(new RegExp(pattern));
-				} catch (e) {
+				} catch (_e) {
 					console.error(`Invalid regex pattern: ${pattern}`);
 				}
 			});
@@ -91,7 +91,7 @@ app.get("/api/graph", (req, res) => {
 			: path.resolve(process.cwd(), rootDir);
 
 		// Check if directory exists
-		const fs = require("fs");
+		const fs = require("node:fs");
 		if (!fs.existsSync(resolvedRootDir)) {
 			return res
 				.status(400)
@@ -114,7 +114,7 @@ app.get("/api/graph", (req, res) => {
 			showFullPath,
 		});
 
-		const graph = parser.parse();
+		const _graph = parser.parse();
 		const result = parser.getSerializableGraph();
 		console.log(
 			`Found ${result.nodes.length} files and ${result.edges.length} dependencies`,

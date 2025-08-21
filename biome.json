@@ -1,0 +1,64 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noBannedTypes": "error",
+				"noUselessConstructor": "error",
+				"noUselessThisAlias": "error",
+				"useArrowFunction": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": "error",
+				"useExhaustiveDependencies": "warn"
+			},
+			"style": {
+				"noParameterAssign": "error",
+				"useConst": "error",
+				"useTemplate": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noImplicitAnyLet": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineEnding": "lf",
+		"lineWidth": 80,
+		"attributePosition": "auto"
+	},
+	"javascript": {
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"quoteStyle": "double",
+			"attributePosition": "auto"
+		},
+		"assist": {
+			"enabled": true
+		}
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"experimentalScannerIgnores": [
+			"node_modules/**",
+			"dist/**",
+			"*.min.js",
+			"*.d.ts",
+			"coverage/**",
+			".git/**"
+		]
+	}
+}

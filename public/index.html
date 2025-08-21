@@ -193,15 +193,15 @@
                 <input type="text" id="include-pattern" placeholder="Include pattern (regex)">
                 <h3>Exclude Pattern</h3>
                 <input type="text" id="exclude-pattern" placeholder="Exclude pattern (regex)">
-                <button onclick="applySettings()">Apply</button>
-                <button onclick="resetGraph()">Reset</button>
+                <button onclick="_applySettings()">Apply</button>
+                <button onclick="_resetGraph()">Reset</button>
             </div>
             <div id="loading">Loading dependency graph...</div>
             <svg id="graph"></svg>
             <div class="zoom-controls">
-                <button class="zoom-btn" onclick="zoomIn()">+</button>
-                <button class="zoom-btn" onclick="zoomOut()">−</button>
-                <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+                <button class="zoom-btn" onclick="_zoomIn()">+</button>
+                <button class="zoom-btn" onclick="_zoomOut()">−</button>
+                <button class="zoom-btn" onclick="_resetZoom()">⟲</button>
             </div>
         </div>
         <div id="sidebar" class="hidden">
