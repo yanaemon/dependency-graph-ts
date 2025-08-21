@@ -1,3 +1,3 @@
 export const Button = () => {
-	console.log("Button component");
+  console.log("Button component");
 };

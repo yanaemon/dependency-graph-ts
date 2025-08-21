@@ -1,3 +1,3 @@
 export const libFunction = () => {
-	console.log("Library function");
+  console.log("Library function");
 };

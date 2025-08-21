@@ -8,9 +8,9 @@ import { functionA } from "./a";
 import { functionB } from "./b";
 
 export function app() {
-	Button();
-	formatDate(new Date());
-	libFunction();
-	functionA();
-	functionB();
+  Button();
+  formatDate(new Date());
+  libFunction();
+  functionA();
+  functionB();
 }

@@ -2,8 +2,8 @@
 import { module2Function } from "./module2";
 
 export function module1Function() {
-	console.log("Module 1");
-	module2Function();
+  console.log("Module 1");
+  module2Function();
 }
 
 export const module1Value = "Module 1 Value";

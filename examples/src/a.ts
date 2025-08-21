@@ -10,10 +10,10 @@ export { functionB } from "./b";
 export * from "./c";
 
 export function functionA() {
-	console.log("Function A");
-	functionB();
-	functionC();
-	functionD();
-	Button();
-	formatDate(new Date());
+  console.log("Function A");
+  functionB();
+  functionC();
+  functionD();
+  Button();
+  formatDate(new Date());
 }

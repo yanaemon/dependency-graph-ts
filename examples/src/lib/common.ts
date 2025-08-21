@@ -6,7 +6,7 @@
 // All imports resolve to the same node in the dependency graph
 
 export function commonFunction() {
-	console.log("Common function");
+  console.log("Common function");
 }
 
 export const commonValue = 42;

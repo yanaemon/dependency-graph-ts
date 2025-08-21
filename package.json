@@ -1,33 +1,33 @@
 {
-	"name": "dependency-graph.ts",
-	"version": "1.0.0",
-	"main": "index.js",
-	"scripts": {
-		"dev": "nodemon",
-		"build": "tsc",
-		"start": "node dist/server.js",
-		"analyze": "ts-node src/server.ts",
-		"lint": "biome check --write .",
-		"format": "biome format --write .",
-		"check": "biome check .",
-		"check:ci": "biome ci ."
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"description": "",
-	"dependencies": {
-		"@types/d3": "^7.4.3",
-		"@types/express": "^5.0.3",
-		"@types/node": "^24.3.0",
-		"d3": "^7.9.0",
-		"express": "^5.1.0",
-		"nodemon": "^3.1.10",
-		"ts-node": "^10.9.2",
-		"typescript": "^5.9.2"
-	},
-	"packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
-	"devDependencies": {
-		"@biomejs/biome": "^2.2.0"
-	}
+  "name": "dependency-graph.ts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "analyze": "ts-node src/server.ts",
+    "lint": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:ci": "biome ci ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "d3": "^7.9.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0"
+  }
 }
