@@ -2,7 +2,6 @@ import express from "express";
 import * as path from "path";
 import { type Config, loadConfig } from "./config";
 import { DependencyParser } from "./parser";
-import "./example/a";
 
 // Load configuration
 // Command line args: node server.js [configPath] [rootDir]

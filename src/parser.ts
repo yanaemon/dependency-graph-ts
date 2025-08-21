@@ -49,8 +49,20 @@ export class DependencyParser {
 		if (fs.existsSync(tsConfigPath)) {
 			try {
 				const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf-8"));
-				const paths = tsConfig.compilerOptions?.paths || {};
-				console.log("Loaded TypeScript path aliases:", paths);
+				const compilerOptions = tsConfig.compilerOptions || {};
+				const paths = compilerOptions.paths || {};
+				const baseUrl = compilerOptions.baseUrl || ".";
+
+				// Store baseUrl for later use
+				this.tsConfigBaseUrl = path.resolve(rootDir, baseUrl);
+
+				// Debug logging (can be enabled with DEBUG env var)
+				if (process.env.DEBUG) {
+					console.log("Loaded TypeScript config:");
+					console.log("  baseUrl:", baseUrl);
+					console.log("  paths:", paths);
+				}
+
 				return paths;
 			} catch (error) {
 				console.error("Failed to parse tsconfig.json:", error);
@@ -58,6 +70,8 @@ export class DependencyParser {
 		}
 		return {};
 	}
+
+	private tsConfigBaseUrl: string = "";
 
 	private shouldExclude(filePath: string): boolean {
 		return this.settings.excludePatterns.some((pattern) =>
@@ -101,7 +115,19 @@ export class DependencyParser {
 
 		for (const importPath of allImports) {
 			// Skip node_modules and external packages
+			// But keep path aliases (they start with @ or have special prefixes)
+			const isPathAlias =
+				importPath.startsWith("@") ||
+				Object.keys(this.settings.pathAliases).some((alias) => {
+					const aliasPrefix = alias.replace(/\/?\*$/, "");
+					return (
+						importPath === aliasPrefix ||
+						importPath.startsWith(aliasPrefix + "/")
+					);
+				});
+
 			if (
+				!isPathAlias &&
 				!importPath.startsWith(".") &&
 				!importPath.startsWith("/") &&
 				!importPath.includes("/")
@@ -159,26 +185,65 @@ export class DependencyParser {
 			for (const [alias, replacements] of Object.entries(
 				this.settings.pathAliases,
 			)) {
-				const aliasPattern = alias.replace("*", "(.*)");
-				const regex = new RegExp(`^${aliasPattern}$`);
-				const match = importPath.match(regex);
+				let match: RegExpMatchArray | null = null;
+				let resolvedPart = "";
+
+				if (alias.includes("*")) {
+					// Handle wildcard aliases
+					const escapedAlias = alias
+						.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+						.replace(/\\\*/g, "(.*)");
+					const regex = new RegExp(`^${escapedAlias}$`);
+					match = importPath.match(regex);
+					if (match) {
+						resolvedPart = match[1] || "";
+					}
+				} else {
+					// Handle exact match aliases
+					if (importPath === alias) {
+						match = ["", ""]; // Dummy match to proceed
+						resolvedPart = "";
+					}
+				}
 
 				if (match) {
+					if (process.env.DEBUG) {
+						console.log(`Matched alias "${alias}" for import "${importPath}"`);
+					}
+
 					for (const replacement of replacements) {
-						const resolvedAlias = replacement.replace("*", match[1] || "");
-						const aliasPath = path.join(this.settings.rootDir, resolvedAlias);
+						// Replace * with the captured group (or nothing for exact matches)
+						const resolvedAlias = replacement.includes("*")
+							? replacement.replace("*", resolvedPart)
+							: replacement;
+
+						// Use baseUrl if available, otherwise use rootDir
+						const basePath = this.tsConfigBaseUrl || this.settings.rootDir;
+						const aliasPath = path.join(basePath, resolvedAlias);
+
+						if (process.env.DEBUG) {
+							console.log(`  Trying resolved path: ${aliasPath}`);
+						}
 
 						// Try with extensions
 						for (const ext of this.settings.extensions) {
 							const withExt = aliasPath + ext;
 							if (fs.existsSync(withExt)) {
-								return path.relative(this.settings.rootDir, withExt);
+								const result = path.relative(this.settings.rootDir, withExt);
+								if (process.env.DEBUG) {
+									console.log(`  Found: ${result}`);
+								}
+								return result;
 							}
 						}
 
 						// Try without extension
 						if (fs.existsSync(aliasPath) && fs.statSync(aliasPath).isFile()) {
-							return path.relative(this.settings.rootDir, aliasPath);
+							const result = path.relative(this.settings.rootDir, aliasPath);
+							if (process.env.DEBUG) {
+								console.log(`  Found: ${result}`);
+							}
+							return result;
 						}
 
 						// Try index files
@@ -186,9 +251,40 @@ export class DependencyParser {
 						for (const ext of this.settings.extensions) {
 							const withExt = indexPath + ext;
 							if (fs.existsSync(withExt)) {
-								return path.relative(this.settings.rootDir, withExt);
+								const result = path.relative(this.settings.rootDir, withExt);
+								if (process.env.DEBUG) {
+									console.log(`  Found: ${result}`);
+								}
+								return result;
 							}
 						}
+					}
+				}
+			}
+
+			// Try baseUrl resolution if available
+			if (this.tsConfigBaseUrl) {
+				const baseUrlPath = path.join(this.tsConfigBaseUrl, importPath);
+
+				// Try with extensions
+				for (const ext of this.settings.extensions) {
+					const withExt = baseUrlPath + ext;
+					if (fs.existsSync(withExt)) {
+						return path.relative(this.settings.rootDir, withExt);
+					}
+				}
+
+				// Try without extension
+				if (fs.existsSync(baseUrlPath) && fs.statSync(baseUrlPath).isFile()) {
+					return path.relative(this.settings.rootDir, baseUrlPath);
+				}
+
+				// Try index files
+				const indexPath = path.join(baseUrlPath, "index");
+				for (const ext of this.settings.extensions) {
+					const withExt = indexPath + ext;
+					if (fs.existsSync(withExt)) {
+						return path.relative(this.settings.rootDir, withExt);
 					}
 				}
 			}
@@ -289,7 +385,9 @@ export class DependencyParser {
 				// Track unresolved imports for debugging
 				if (unresolved.length > 0) {
 					node.unresolvedImports = unresolved;
-					console.log(`Unresolved imports in ${relativePath}:`, unresolved);
+					if (process.env.DEBUG) {
+						console.log(`Unresolved imports in ${relativePath}:`, unresolved);
+					}
 				}
 
 				for (const importPath of node.imports) {

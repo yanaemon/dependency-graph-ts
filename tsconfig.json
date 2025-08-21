@@ -5,6 +5,13 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"],
+      "@lib": ["lib/index.ts"],
+      "@example/*": ["./example/*"]
+    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

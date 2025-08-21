@@ -1,3 +1,6 @@
+// Test path aliases
+import { Button } from "@components/Button";
+import { formatDate } from "@utils/helpers";
 import { functionB } from "./b";
 import { functionC } from "./c";
 import { functionD } from "./d";
@@ -11,4 +14,6 @@ export function functionA() {
 	functionB();
 	functionC();
 	functionD();
+	Button();
+	formatDate(new Date());
 }
