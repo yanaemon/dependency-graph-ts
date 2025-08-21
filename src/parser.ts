@@ -380,7 +380,20 @@ export class DependencyParser {
 
 			const node = this.graph.nodes.get(relativePath);
 			if (node) {
-				node.imports = resolved.filter((imp) => this.graph.nodes.has(imp));
+				// Filter out imports to excluded files
+				node.imports = resolved.filter((imp) => {
+					// Check if the import target is excluded
+					if (this.shouldExclude(imp)) {
+						if (process.env.DEBUG) {
+							console.log(
+								`Excluding import to ${imp} (matched exclude pattern)`,
+							);
+						}
+						return false;
+					}
+					// Check if the import target exists in our graph
+					return this.graph.nodes.has(imp);
+				});
 
 				// Track unresolved imports for debugging
 				if (unresolved.length > 0) {
