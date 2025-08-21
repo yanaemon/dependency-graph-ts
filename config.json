@@ -3,11 +3,13 @@
   "defaultRootDir": ".",
   "excludePatterns": [
     "node_modules",
+    "dist",
     "\\.test\\.",
     "\\.spec\\.",
     "__tests__"
   ],
   "extensions": [".ts", ".tsx", ".js", ".jsx"],
+  "showFullPath": true,
   "ui": {
     "nodeRadius": 8,
     "linkDistance": 100,

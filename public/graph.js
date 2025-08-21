@@ -4,8 +4,9 @@ let svg = null;
 let g = null;
 let zoom = null;
 let selectedNode = null;
+let currentShowFullPath = true;
 
-async function loadGraph(excludePattern = '', rootDir = '') {
+async function loadGraph(excludePattern = '', rootDir = '', showFullPath = null) {
     try {
         document.getElementById('loading').style.display = 'block';
         
@@ -15,6 +16,9 @@ async function loadGraph(excludePattern = '', rootDir = '') {
         }
         if (rootDir) {
             params.append('rootDir', rootDir);
+        }
+        if (showFullPath !== null) {
+            params.append('showFullPath', showFullPath);
         }
         
         const response = await fetch(`/api/graph?${params}`);
@@ -120,7 +124,7 @@ function renderGraph(data) {
     node.append('text')
         .attr('dx', 12)
         .attr('dy', '.35em')
-        .text(d => d.name);
+        .text(d => d.displayName || d.name);
     
     node.on('click', (event, d) => {
         event.stopPropagation();
@@ -247,12 +251,24 @@ function showNodeDetails(node) {
 function applySettings() {
     const excludePattern = document.getElementById('exclude-pattern').value;
     const rootDir = document.getElementById('root-dir').value;
-    loadGraph(excludePattern, rootDir);
+    const showFullPath = document.getElementById('show-full-path').checked;
+    currentShowFullPath = showFullPath;
+    loadGraph(excludePattern, rootDir, showFullPath);
+}
+
+function toggleFullPath() {
+    const showFullPath = document.getElementById('show-full-path').checked;
+    currentShowFullPath = showFullPath;
+    const excludePattern = document.getElementById('exclude-pattern').value;
+    const rootDir = document.getElementById('root-dir').value;
+    loadGraph(excludePattern, rootDir, showFullPath);
 }
 
 function resetGraph() {
     document.getElementById('exclude-pattern').value = '';
     document.getElementById('root-dir').value = '';
+    document.getElementById('show-full-path').checked = true;
+    currentShowFullPath = true;
     loadGraph();
 }
 
@@ -274,6 +290,16 @@ window.addEventListener('resize', () => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load config to get default showFullPath setting
+    try {
+        const configResponse = await fetch('/api/config');
+        const config = await configResponse.json();
+        currentShowFullPath = config.showFullPath;
+        document.getElementById('show-full-path').checked = config.showFullPath;
+    } catch (error) {
+        console.error('Failed to load config:', error);
+    }
+    
     loadGraph();
 });

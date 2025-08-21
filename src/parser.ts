@@ -4,6 +4,7 @@ import * as path from "path";
 export interface DependencyNode {
 	id: string;
 	name: string;
+	displayName: string;
 	fullPath: string;
 	imports: string[];
 	importedBy: string[];
@@ -18,6 +19,7 @@ export interface ParserSettings {
 	excludePatterns?: RegExp[];
 	rootDir: string;
 	extensions?: string[];
+	showFullPath?: boolean;
 }
 
 export class DependencyParser {
@@ -29,6 +31,8 @@ export class DependencyParser {
 			...settings,
 			excludePatterns: settings.excludePatterns || [],
 			extensions: settings.extensions || [".ts", ".tsx", ".js", ".jsx"],
+			showFullPath:
+				settings.showFullPath !== undefined ? settings.showFullPath : true,
 		};
 		this.graph = {
 			nodes: new Map(),
@@ -145,6 +149,9 @@ export class DependencyParser {
 			const node: DependencyNode = {
 				id: relativePath,
 				name: path.basename(file),
+				displayName: this.settings.showFullPath
+					? relativePath
+					: path.basename(file),
 				fullPath: file,
 				imports: [],
 				importedBy: [],

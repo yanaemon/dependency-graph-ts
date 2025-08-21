@@ -6,6 +6,7 @@ export interface Config {
 	defaultRootDir: string;
 	excludePatterns: string[];
 	extensions: string[];
+	showFullPath: boolean;
 	ui: {
 		nodeRadius: number;
 		linkDistance: number;
@@ -18,6 +19,7 @@ const DEFAULT_CONFIG: Config = {
 	defaultRootDir: process.cwd(),
 	excludePatterns: [],
 	extensions: [".ts", ".tsx", ".js", ".jsx"],
+	showFullPath: true,
 	ui: {
 		nodeRadius: 8,
 		linkDistance: 100,

@@ -192,6 +192,10 @@
                 <h3>Settings</h3>
                 <input type="text" id="exclude-pattern" placeholder="Exclude pattern (regex)">
                 <input type="text" id="root-dir" placeholder="Directory path (e.g., /path/to/project or ../other-project)">
+                <label style="display: block; margin: 10px 0; color: #e0e0e0;">
+                    <input type="checkbox" id="show-full-path" checked onchange="toggleFullPath()">
+                    Show full path
+                </label>
                 <button onclick="applySettings()">Apply</button>
                 <button onclick="resetGraph()">Reset</button>
             </div>

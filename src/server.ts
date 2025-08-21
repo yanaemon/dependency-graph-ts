@@ -57,6 +57,10 @@ app.get("/api/graph", (req, res) => {
 		}
 
 		const rootDir = (req.query.rootDir as string) || config.defaultRootDir;
+		const showFullPath =
+			req.query.showFullPath !== undefined
+				? req.query.showFullPath === "true"
+				: config.showFullPath;
 
 		// Resolve the path - handles both absolute and relative paths
 		const resolvedRootDir = path.isAbsolute(rootDir)
@@ -83,6 +87,7 @@ app.get("/api/graph", (req, res) => {
 			rootDir: resolvedRootDir,
 			excludePatterns,
 			extensions: config.extensions,
+			showFullPath,
 		});
 
 		const graph = parser.parse();
