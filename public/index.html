@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Dependency Graph</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+        }
+
+        #graph-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #sidebar {
+            width: 300px;
+            background: #2a2a2a;
+            border-left: 1px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        #sidebar.hidden {
+            transform: translateX(100%);
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(42, 42, 42, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+        }
+
+        #controls h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        #controls input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 4px;
+        }
+
+        #controls button {
+            padding: 8px 16px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        #controls button:hover {
+            background: #0052a3;
+        }
+
+        #sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        #sidebar h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        #sidebar ul {
+            list-style: none;
+        }
+
+        #sidebar li {
+            padding: 5px 0;
+            font-size: 13px;
+            color: #ccc;
+            word-break: break-all;
+        }
+
+        #sidebar .circular {
+            color: #ff6b6b;
+        }
+
+        #sidebar .selected-file {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .node {
+            cursor: pointer;
+        }
+
+        .node circle {
+            fill: #4CAF50;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .node.selected circle {
+            fill: #FFC107;
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font-size: 10px;
+            fill: #e0e0e0;
+            pointer-events: none;
+        }
+
+        .link {
+            fill: none;
+            stroke: #666;
+            stroke-width: 1px;
+            marker-end: url(#arrow);
+        }
+
+        .link.circular {
+            stroke: #ff6b6b;
+            stroke-width: 2px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(42, 42, 42, 0.95);
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(60, 60, 60, 0.95);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="graph-container">
+            <div id="controls">
+                <h3>Settings</h3>
+                <input type="text" id="exclude-pattern" placeholder="Exclude pattern (regex)">
+                <input type="text" id="root-dir" placeholder="Directory path (e.g., /path/to/project or ../other-project)">
+                <button onclick="applySettings()">Apply</button>
+                <button onclick="resetGraph()">Reset</button>
+            </div>
+            <div id="loading">Loading dependency graph...</div>
+            <svg id="graph"></svg>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">−</button>
+                <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+            </div>
+        </div>
+        <div id="sidebar" class="hidden">
+            <h2>Node Details</h2>
+            <div id="node-details"></div>
+        </div>
+    </div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="graph.js"></script>
+</body>
+</html>

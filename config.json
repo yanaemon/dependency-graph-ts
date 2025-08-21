@@ -1,0 +1,16 @@
+{
+  "port": 4000,
+  "defaultRootDir": ".",
+  "excludePatterns": [
+    "node_modules",
+    "\\.test\\.",
+    "\\.spec\\.",
+    "__tests__"
+  ],
+  "extensions": [".ts", ".tsx", ".js", ".jsx"],
+  "ui": {
+    "nodeRadius": 8,
+    "linkDistance": 100,
+    "chargeStrength": -300
+  }
+}
