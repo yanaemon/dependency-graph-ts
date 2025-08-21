@@ -5,6 +5,7 @@ export interface Config {
 	port: number;
 	defaultRootDir: string;
 	excludePatterns: string[];
+	includePatterns: string[];
 	extensions: string[];
 	showFullPath: boolean;
 	ui: {
@@ -18,6 +19,7 @@ const DEFAULT_CONFIG: Config = {
 	port: 4000,
 	defaultRootDir: process.cwd(),
 	excludePatterns: [],
+	includePatterns: [],
 	extensions: [".ts", ".tsx", ".js", ".jsx"],
 	showFullPath: true,
 	ui: {

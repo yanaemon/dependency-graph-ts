@@ -5,11 +5,14 @@ let g = null;
 let zoom = null;
 let selectedNode = null;
 
-async function loadGraph(excludePattern = '') {
+async function loadGraph(includePattern = '', excludePattern = '') {
     try {
         document.getElementById('loading').style.display = 'block';
         
         const params = new URLSearchParams();
+        if (includePattern) {
+            params.append('include', includePattern);
+        }
         if (excludePattern) {
             params.append('exclude', excludePattern);
         }
@@ -244,11 +247,13 @@ function showNodeDetails(node) {
 }
 
 function applySettings() {
+    const includePattern = document.getElementById('include-pattern').value;
     const excludePattern = document.getElementById('exclude-pattern').value;
-    loadGraph(excludePattern);
+    loadGraph(includePattern, excludePattern);
 }
 
 function resetGraph() {
+    document.getElementById('include-pattern').value = '';
     document.getElementById('exclude-pattern').value = '';
     loadGraph();
 }

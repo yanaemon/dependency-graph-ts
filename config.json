@@ -8,6 +8,7 @@
     "\\.spec\\.",
     "__tests__"
   ],
+  "includePatterns": [],
   "extensions": [".ts", ".tsx", ".js", ".jsx"],
   "showFullPath": true,
   "ui": {

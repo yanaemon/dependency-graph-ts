@@ -18,6 +18,7 @@ export interface DependencyGraph {
 
 export interface ParserSettings {
 	excludePatterns?: RegExp[];
+	includePatterns?: RegExp[];
 	rootDir: string;
 	extensions?: string[];
 	showFullPath?: boolean;
@@ -32,6 +33,7 @@ export class DependencyParser {
 		this.settings = {
 			...settings,
 			excludePatterns: settings.excludePatterns || [],
+			includePatterns: settings.includePatterns || [],
 			extensions: settings.extensions || [".ts", ".tsx", ".js", ".jsx"],
 			showFullPath:
 				settings.showFullPath !== undefined ? settings.showFullPath : true,
@@ -75,6 +77,17 @@ export class DependencyParser {
 
 	private shouldExclude(filePath: string): boolean {
 		return this.settings.excludePatterns.some((pattern) =>
+			pattern.test(filePath),
+		);
+	}
+
+	private shouldInclude(filePath: string): boolean {
+		// If no include patterns specified, include all (that aren't excluded)
+		if (this.settings.includePatterns.length === 0) {
+			return true;
+		}
+		// Otherwise, file must match at least one include pattern
+		return this.settings.includePatterns.some((pattern) =>
 			pattern.test(filePath),
 		);
 	}
@@ -345,7 +358,10 @@ export class DependencyParser {
 				const ext = path.extname(entry.name);
 				if (this.settings.extensions.includes(ext)) {
 					const relativePath = path.relative(this.settings.rootDir, fullPath);
-					if (!this.shouldExclude(relativePath)) {
+					if (
+						!this.shouldExclude(relativePath) &&
+						this.shouldInclude(relativePath)
+					) {
 						files.push(fullPath);
 					}
 				}

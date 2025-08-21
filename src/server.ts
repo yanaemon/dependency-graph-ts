@@ -31,11 +31,21 @@ app.get("/api/config", (req, res) => {
 app.get("/api/graph", (req, res) => {
 	try {
 		const excludePatterns: RegExp[] = [];
+		const includePatterns: RegExp[] = [];
 
 		// Start with config exclude patterns
 		config.excludePatterns.forEach((pattern) => {
 			try {
 				excludePatterns.push(new RegExp(pattern));
+			} catch (e) {
+				console.error(`Invalid regex pattern in config: ${pattern}`);
+			}
+		});
+
+		// Start with config include patterns
+		config.includePatterns.forEach((pattern) => {
+			try {
+				includePatterns.push(new RegExp(pattern));
 			} catch (e) {
 				console.error(`Invalid regex pattern in config: ${pattern}`);
 			}
@@ -49,6 +59,20 @@ app.get("/api/graph", (req, res) => {
 			excludes.forEach((pattern: any) => {
 				try {
 					excludePatterns.push(new RegExp(pattern));
+				} catch (e) {
+					console.error(`Invalid regex pattern: ${pattern}`);
+				}
+			});
+		}
+
+		// Add query param include patterns
+		if (req.query.include) {
+			const includes = Array.isArray(req.query.include)
+				? req.query.include
+				: [req.query.include];
+			includes.forEach((pattern: any) => {
+				try {
+					includePatterns.push(new RegExp(pattern));
 				} catch (e) {
 					console.error(`Invalid regex pattern: ${pattern}`);
 				}
@@ -85,6 +109,7 @@ app.get("/api/graph", (req, res) => {
 		const parser = new DependencyParser({
 			rootDir: resolvedRootDir,
 			excludePatterns,
+			includePatterns,
 			extensions: config.extensions,
 			showFullPath,
 		});
