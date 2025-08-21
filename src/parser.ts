@@ -8,6 +8,7 @@ export interface DependencyNode {
 	fullPath: string;
 	imports: string[];
 	importedBy: string[];
+	unresolvedImports?: string[];
 }
 
 export interface DependencyGraph {
@@ -20,6 +21,7 @@ export interface ParserSettings {
 	rootDir: string;
 	extensions?: string[];
 	showFullPath?: boolean;
+	pathAliases?: Record<string, string[]>; // e.g., { "@/*": ["src/*"] }
 }
 
 export class DependencyParser {
@@ -33,11 +35,28 @@ export class DependencyParser {
 			extensions: settings.extensions || [".ts", ".tsx", ".js", ".jsx"],
 			showFullPath:
 				settings.showFullPath !== undefined ? settings.showFullPath : true,
+			pathAliases:
+				settings.pathAliases || this.loadTsConfigPaths(settings.rootDir),
 		};
 		this.graph = {
 			nodes: new Map(),
 			edges: [],
 		};
+	}
+
+	private loadTsConfigPaths(rootDir: string): Record<string, string[]> {
+		const tsConfigPath = path.join(rootDir, "tsconfig.json");
+		if (fs.existsSync(tsConfigPath)) {
+			try {
+				const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf-8"));
+				const paths = tsConfig.compilerOptions?.paths || {};
+				console.log("Loaded TypeScript path aliases:", paths);
+				return paths;
+			} catch (error) {
+				console.error("Failed to parse tsconfig.json:", error);
+			}
+		}
+		return {};
 	}
 
 	private shouldExclude(filePath: string): boolean {
@@ -46,8 +65,12 @@ export class DependencyParser {
 		);
 	}
 
-	private extractImports(content: string, filePath: string): string[] {
-		const imports: string[] = [];
+	private extractImports(
+		content: string,
+		filePath: string,
+	): { resolved: string[]; unresolved: string[] } {
+		const resolved: string[] = [];
+		const unresolved: string[] = [];
 
 		// Remove single-line comments
 		let cleanContent = content.replace(/\/\/.*$/gm, "");
@@ -55,38 +78,62 @@ export class DependencyParser {
 		// Remove multi-line comments
 		cleanContent = cleanContent.replace(/\/\*[\s\S]*?\*\//g, "");
 
-		const importRegex =
-			/(?:import|export)\s+(?:[\s\S]*?from\s+)?['"]([^'"]+)['"]/g;
-		const requireRegex = /require\s*\(['"]([^'"]+)['"]\)/g;
+		// Improved regex patterns to catch more import variations
+		const patterns = [
+			// Standard ES6 imports: import ... from '...'
+			/import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*)?)*\s*from\s+['"]([^'"]+)['"]/g,
+			// Export from: export ... from '...'
+			/export\s+(?:\{[^}]*\}|\*)\s+from\s+['"]([^'"]+)['"]/g,
+			// Dynamic imports: import('...')
+			/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+			// Require statements: require('...')
+			/require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+		];
 
-		let match;
-		while ((match = importRegex.exec(cleanContent)) !== null) {
-			const importPath = match[1];
-			const resolvedPath = this.resolveImportPath(importPath, filePath);
-			if (resolvedPath) {
-				imports.push(resolvedPath);
+		const allImports = new Set<string>();
+
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(cleanContent)) !== null) {
+				allImports.add(match[1]);
 			}
 		}
 
-		while ((match = requireRegex.exec(cleanContent)) !== null) {
-			const importPath = match[1];
+		for (const importPath of allImports) {
+			// Skip node_modules and external packages
+			if (
+				!importPath.startsWith(".") &&
+				!importPath.startsWith("/") &&
+				!importPath.includes("/")
+			) {
+				// This is likely an npm package, skip it
+				continue;
+			}
+
 			const resolvedPath = this.resolveImportPath(importPath, filePath);
 			if (resolvedPath) {
-				imports.push(resolvedPath);
+				resolved.push(resolvedPath);
+			} else {
+				unresolved.push(importPath);
 			}
 		}
 
-		return [...new Set(imports)];
+		return {
+			resolved: [...new Set(resolved)],
+			unresolved: [...new Set(unresolved)],
+		};
 	}
 
 	private resolveImportPath(
 		importPath: string,
 		fromFile: string,
 	): string | null {
+		// Handle relative imports
 		if (importPath.startsWith(".")) {
 			const dir = path.dirname(fromFile);
 			const resolved = path.resolve(dir, importPath);
 
+			// Try with extensions
 			for (const ext of this.settings.extensions) {
 				const withExt = resolved + ext;
 				if (fs.existsSync(withExt)) {
@@ -94,15 +141,86 @@ export class DependencyParser {
 				}
 			}
 
+			// Try without extension if file exists
 			if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
 				return path.relative(this.settings.rootDir, resolved);
 			}
 
+			// Try index files
 			const indexPath = path.join(resolved, "index");
 			for (const ext of this.settings.extensions) {
 				const withExt = indexPath + ext;
 				if (fs.existsSync(withExt)) {
 					return path.relative(this.settings.rootDir, withExt);
+				}
+			}
+		} else {
+			// Handle TypeScript path aliases first
+			for (const [alias, replacements] of Object.entries(
+				this.settings.pathAliases,
+			)) {
+				const aliasPattern = alias.replace("*", "(.*)");
+				const regex = new RegExp(`^${aliasPattern}$`);
+				const match = importPath.match(regex);
+
+				if (match) {
+					for (const replacement of replacements) {
+						const resolvedAlias = replacement.replace("*", match[1] || "");
+						const aliasPath = path.join(this.settings.rootDir, resolvedAlias);
+
+						// Try with extensions
+						for (const ext of this.settings.extensions) {
+							const withExt = aliasPath + ext;
+							if (fs.existsSync(withExt)) {
+								return path.relative(this.settings.rootDir, withExt);
+							}
+						}
+
+						// Try without extension
+						if (fs.existsSync(aliasPath) && fs.statSync(aliasPath).isFile()) {
+							return path.relative(this.settings.rootDir, aliasPath);
+						}
+
+						// Try index files
+						const indexPath = path.join(aliasPath, "index");
+						for (const ext of this.settings.extensions) {
+							const withExt = indexPath + ext;
+							if (fs.existsSync(withExt)) {
+								return path.relative(this.settings.rootDir, withExt);
+							}
+						}
+					}
+				}
+			}
+
+			// Handle absolute imports (from project root)
+			// Try common patterns like 'src/something'
+			const possiblePaths = [
+				path.join(this.settings.rootDir, importPath),
+				path.join(this.settings.rootDir, "src", importPath),
+			];
+
+			for (const basePath of possiblePaths) {
+				// Try with extensions
+				for (const ext of this.settings.extensions) {
+					const withExt = basePath + ext;
+					if (fs.existsSync(withExt)) {
+						return path.relative(this.settings.rootDir, withExt);
+					}
+				}
+
+				// Try without extension
+				if (fs.existsSync(basePath) && fs.statSync(basePath).isFile()) {
+					return path.relative(this.settings.rootDir, basePath);
+				}
+
+				// Try index files
+				const indexPath = path.join(basePath, "index");
+				for (const ext of this.settings.extensions) {
+					const withExt = indexPath + ext;
+					if (fs.existsSync(withExt)) {
+						return path.relative(this.settings.rootDir, withExt);
+					}
 				}
 			}
 		}
@@ -162,11 +280,17 @@ export class DependencyParser {
 		for (const file of files) {
 			const content = fs.readFileSync(file, "utf-8");
 			const relativePath = path.relative(this.settings.rootDir, file);
-			const imports = this.extractImports(content, file);
+			const { resolved, unresolved } = this.extractImports(content, file);
 
 			const node = this.graph.nodes.get(relativePath);
 			if (node) {
-				node.imports = imports.filter((imp) => this.graph.nodes.has(imp));
+				node.imports = resolved.filter((imp) => this.graph.nodes.has(imp));
+
+				// Track unresolved imports for debugging
+				if (unresolved.length > 0) {
+					node.unresolvedImports = unresolved;
+					console.log(`Unresolved imports in ${relativePath}:`, unresolved);
+				}
 
 				for (const importPath of node.imports) {
 					const targetNode = this.graph.nodes.get(importPath);
