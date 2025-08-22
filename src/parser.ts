@@ -1,5 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as jsonc from "jsonc-parser";
+import * as ts from "typescript";
 
 export interface DependencyNode {
   id: string;
@@ -50,10 +52,26 @@ export class DependencyParser {
     const tsConfigPath = path.join(rootDir, "tsconfig.json");
     if (fs.existsSync(tsConfigPath)) {
       try {
-        const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf-8"));
-        const compilerOptions = tsConfig.compilerOptions || {};
-        const paths = compilerOptions.paths || {};
-        const baseUrl = compilerOptions.baseUrl || ".";
+        const content = fs.readFileSync(tsConfigPath, "utf-8");
+        // Use jsonc-parser to handle comments in tsconfig.json
+        const tsConfig = jsonc.parseTree(content);
+
+        if (!tsConfig) {
+          return {};
+        }
+
+        const compilerOptions = jsonc.findNodeAtLocation(tsConfig, [
+          "compilerOptions",
+        ]);
+        const pathsNode = compilerOptions
+          ? jsonc.findNodeAtLocation(compilerOptions, ["paths"])
+          : null;
+        const baseUrlNode = compilerOptions
+          ? jsonc.findNodeAtLocation(compilerOptions, ["baseUrl"])
+          : null;
+
+        const paths = pathsNode ? jsonc.getNodeValue(pathsNode) : {};
+        const baseUrl = baseUrlNode ? jsonc.getNodeValue(baseUrlNode) : ".";
 
         // Store baseUrl for later use
         this.tsConfigBaseUrl = path.resolve(rootDir, baseUrl);
@@ -98,33 +116,60 @@ export class DependencyParser {
   ): { resolved: string[]; unresolved: string[] } {
     const resolved: string[] = [];
     const unresolved: string[] = [];
-
-    // Remove single-line comments
-    let cleanContent = content.replace(/\/\/.*$/gm, "");
-
-    // Remove multi-line comments
-    cleanContent = cleanContent.replace(/\/\*[\s\S]*?\*\//g, "");
-
-    // Improved regex patterns to catch more import variations
-    const patterns = [
-      // Standard ES6 imports: import ... from '...'
-      /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*)?)*\s*from\s+['"]([^'"]+)['"]/g,
-      // Export from: export ... from '...'
-      /export\s+(?:\{[^}]*\}|\*)\s+from\s+['"]([^'"]+)['"]/g,
-      // Dynamic imports: import('...')
-      /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-      // Require statements: require('...')
-      /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    ];
-
     const allImports = new Set<string>();
 
-    for (const pattern of patterns) {
-      let match;
-      while ((match = pattern.exec(cleanContent)) !== null) {
-        allImports.add(match[1]);
+    // Create a TypeScript source file from the content
+    const sourceFile = ts.createSourceFile(
+      filePath,
+      content,
+      ts.ScriptTarget.Latest,
+      true,
+    );
+
+    // Walk the AST to find all import/export statements
+    const visit = (node: ts.Node) => {
+      // Handle import declarations: import ... from '...'
+      if (ts.isImportDeclaration(node) && node.moduleSpecifier) {
+        if (ts.isStringLiteral(node.moduleSpecifier)) {
+          allImports.add(node.moduleSpecifier.text);
+        }
       }
-    }
+      // Handle export declarations: export ... from '...'
+      else if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
+        if (ts.isStringLiteral(node.moduleSpecifier)) {
+          allImports.add(node.moduleSpecifier.text);
+        }
+      }
+      // Handle dynamic imports: import('...')
+      else if (ts.isCallExpression(node)) {
+        if (
+          node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+          node.arguments.length > 0
+        ) {
+          const arg = node.arguments[0];
+          if (ts.isStringLiteral(arg)) {
+            allImports.add(arg.text);
+          }
+        }
+        // Handle require statements: require('...')
+        else if (
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === "require" &&
+          node.arguments.length > 0
+        ) {
+          const arg = node.arguments[0];
+          if (ts.isStringLiteral(arg)) {
+            allImports.add(arg.text);
+          }
+        }
+      }
+
+      // Recursively visit child nodes
+      ts.forEachChild(node, visit);
+    };
+
+    // Start visiting from the root
+    visit(sourceFile);
 
     for (const importPath of allImports) {
       // Skip node_modules and external packages
