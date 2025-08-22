@@ -123,6 +123,12 @@
             fill: #4CAF50;
             stroke: #fff;
             stroke-width: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .node:hover circle {
+            stroke-width: 3px;
+            fill-opacity: 0.9;
         }
 
         .node.selected circle {
@@ -195,6 +201,12 @@
                 <input type="text" id="exclude-pattern" placeholder="Exclude pattern (regex)">
                 <button onclick="_applySettings()">Apply</button>
                 <button onclick="_resetGraph()">Reset</button>
+                <div style="font-size: 11px; color: #aaa; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+                    <strong>Legend:</strong><br>
+                    Node size = Import count<br>
+                    Red = Highly imported<br>
+                    Green = Less imported
+                </div>
             </div>
             <div id="loading">Loading dependency graph...</div>
             <svg id="graph"></svg>

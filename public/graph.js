@@ -44,13 +44,37 @@ function renderGraph(data) {
   d3.select("#graph").selectAll("*").remove();
 
   svg = d3.select("#graph").attr("width", width).attr("height", height);
+  
+  // Calculate node sizes based on import references
+  const importCounts = data.nodes.map(n => n.importedBy.length);
+  const maxImports = Math.max(...importCounts, 1);
+  const minRadius = 5;
+  const maxRadius = 20;
+  
+  // Create a scale function for node radius
+  const radiusScale = d3.scaleSqrt()
+    .domain([0, maxImports])
+    .range([minRadius, maxRadius]);
+  
+  // Create a color scale for highly imported nodes
+  const colorScale = d3.scaleSequential()
+    .domain([0, maxImports])
+    .interpolator(d3.interpolateRgb("#4CAF50", "#FF6B6B"));
+  
+  // Add radius and color to each node
+  data.nodes.forEach(node => {
+    node.radius = radiusScale(node.importedBy.length);
+    node.color = node.importedBy.length > maxImports * 0.5 
+      ? colorScale(node.importedBy.length)
+      : "#4CAF50";
+  });
 
   svg
     .append("defs")
     .append("marker")
     .attr("id", "arrow")
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 20)
+    .attr("refX", 25)
     .attr("refY", 0)
     .attr("markerWidth", 8)
     .attr("markerHeight", 8)
@@ -64,7 +88,7 @@ function renderGraph(data) {
     .append("marker")
     .attr("id", "arrow-circular")
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 20)
+    .attr("refX", 25)
     .attr("refY", 0)
     .attr("markerWidth", 8)
     .attr("markerHeight", 8)
@@ -102,11 +126,16 @@ function renderGraph(data) {
       d3
         .forceLink(links)
         .id((d) => d.id)
-        .distance(100),
+        .distance((d) => {
+          // Adjust link distance based on node sizes
+          const sourceRadius = d.source.radius || 5;
+          const targetRadius = d.target.radius || 5;
+          return 50 + sourceRadius + targetRadius;
+        }),
     )
     .force("charge", d3.forceManyBody().strength(-300))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collision", d3.forceCollide().radius(30));
+    .force("collision", d3.forceCollide().radius((d) => d.radius + 5));
 
   const link = g
     .append("g")
@@ -128,11 +157,18 @@ function renderGraph(data) {
     .attr("class", "node")
     .call(drag(simulation));
 
-  node.append("circle").attr("r", 8);
+  node.append("circle")
+    .attr("r", (d) => d.radius)
+    .style("fill", (d) => d.color)
+    .style("fill-opacity", 0.8);
+
+  // Add tooltip showing import count
+  node.append("title")
+    .text((d) => `${d.displayName || d.name}\nImported by: ${d.importedBy.length} files\nImports: ${d.imports.length} files`);
 
   node
     .append("text")
-    .attr("dx", 12)
+    .attr("dx", (d) => d.radius + 5)
     .attr("dy", ".35em")
     .text((d) => d.displayName || d.name);
 
