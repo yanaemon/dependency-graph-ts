@@ -48,6 +48,11 @@ export class DependencyParser {
     };
   }
 
+  /**
+   * Loads TypeScript path aliases from tsconfig.json
+   * @param rootDir - The root directory containing tsconfig.json
+   * @returns Object mapping path aliases to their replacement paths
+   */
   private loadTsConfigPaths(rootDir: string): Record<string, string[]> {
     const tsConfigPath = path.join(rootDir, "tsconfig.json");
     if (fs.existsSync(tsConfigPath)) {
@@ -93,12 +98,22 @@ export class DependencyParser {
 
   private tsConfigBaseUrl: string = "";
 
+  /**
+   * Checks if a file should be excluded based on exclude patterns
+   * @param filePath - The file path to check
+   * @returns True if the file should be excluded
+   */
   private shouldExclude(filePath: string): boolean {
     return this.settings.excludePatterns.some((pattern) =>
       pattern.test(filePath),
     );
   }
 
+  /**
+   * Checks if a file should be included based on include patterns
+   * @param filePath - The file path to check
+   * @returns True if the file should be included
+   */
   private shouldInclude(filePath: string): boolean {
     // If no include patterns specified, include all (that aren't excluded)
     if (this.settings.includePatterns.length === 0) {
@@ -110,6 +125,12 @@ export class DependencyParser {
     );
   }
 
+  /**
+   * Extracts import statements from a TypeScript/JavaScript file using AST parsing
+   * @param content - The file content to parse
+   * @param filePath - The path of the file being parsed
+   * @returns Object containing resolved and unresolved import paths
+   */
   private extractImports(
     content: string,
     filePath: string,
@@ -208,6 +229,12 @@ export class DependencyParser {
     };
   }
 
+  /**
+   * Resolves an import path to an actual file path, handling aliases and extensions
+   * @param importPath - The import path to resolve
+   * @param fromFile - The file containing the import statement
+   * @returns The resolved file path relative to root, or null if unresolved
+   */
   private resolveImportPath(
     importPath: string,
     fromFile: string,
@@ -382,6 +409,11 @@ export class DependencyParser {
     return null;
   }
 
+  /**
+   * Recursively scans a directory for TypeScript/JavaScript files
+   * @param dir - The directory to scan
+   * @returns Array of absolute file paths
+   */
   private scanDirectory(dir: string): string[] {
     const files: string[] = [];
 
@@ -416,6 +448,10 @@ export class DependencyParser {
     return files;
   }
 
+  /**
+   * Parses the codebase and builds the dependency graph
+   * @returns The complete dependency graph with nodes and edges
+   */
   public parse(): DependencyGraph {
     const files = this.scanDirectory(this.settings.rootDir);
 
@@ -482,6 +518,10 @@ export class DependencyParser {
     return this.graph;
   }
 
+  /**
+   * Detects circular dependencies in the graph using depth-first search
+   * Marks edges that are part of circular dependencies
+   */
   private detectCircularDependencies(): void {
     const visited = new Set<string>();
     const recursionStack = new Set<string>();
@@ -530,6 +570,10 @@ export class DependencyParser {
     }
   }
 
+  /**
+   * Converts the graph to a serializable format for JSON output
+   * @returns Object with nodes array and edges array
+   */
   public getSerializableGraph() {
     return {
       nodes: Array.from(this.graph.nodes.values()),

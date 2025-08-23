@@ -29,6 +29,11 @@ const DEFAULT_CONFIG: Config = {
   },
 };
 
+/**
+ * Loads configuration from a JSON file with fallback to defaults
+ * @param configPath - Optional path to the configuration file
+ * @returns The loaded configuration merged with defaults
+ */
 export function loadConfig(configPath?: string): Config {
   // Priority order:
   // 1. Command line specified config path
@@ -77,6 +82,11 @@ export function loadConfig(configPath?: string): Config {
   }
 }
 
+/**
+ * Saves configuration to a JSON file
+ * @param config - The configuration object to save
+ * @param configPath - Optional path where to save the configuration file
+ */
 export function saveConfig(config: Config, configPath?: string): void {
   const resolvedConfigPath =
     configPath ||

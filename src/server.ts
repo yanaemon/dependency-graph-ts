@@ -24,10 +24,23 @@ const PORT = config.port;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
+/**
+ * GET /api/config
+ * Returns the current configuration
+ */
 app.get("/api/config", (_req, res) => {
   res.json(config);
 });
 
+/**
+ * GET /api/graph
+ * Generates and returns the dependency graph for the specified directory
+ * Query params:
+ * - rootDir: Directory to analyze (optional)
+ * - exclude: Regex patterns to exclude (optional)
+ * - include: Regex patterns to include (optional)
+ * - showFullPath: Whether to show full file paths (optional)
+ */
 app.get("/api/graph", (req, res) => {
   try {
     const excludePatterns: RegExp[] = [];
