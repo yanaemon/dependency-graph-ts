@@ -138,7 +138,7 @@ npm run lint
 ## Project Structure
 
 ```
-dependency-graph.ts/
+dependency-graph-ts/
 ├── src/               # Core functionality
 │   ├── parser.ts      # Dependency parser
 │   ├── server.ts      # Express server
